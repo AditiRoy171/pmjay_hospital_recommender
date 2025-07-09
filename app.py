@@ -11,11 +11,11 @@ import matplotlib.pyplot as plt
 # ---------- Load Data and Model ----------
 @st.cache_data
 def load_data():
-    return pd.read_csv(r"C:\Users\BIT\OneDrive\Documents\Machine Learning Notebooks\end_to_end_ml_project\Hospital_Recommender\synthetic_pmjay_dataset.csv")
+    return pd.read_csv("synthetic_pmjay_dataset.csv")
 
 @st.cache_resource
 def load_model():
-    return joblib.load(r"C:\Users\BIT\OneDrive\Documents\Machine Learning Notebooks\end_to_end_ml_project\Hospital_Recommender\hospital_xgb_pipeline.pkl")
+    return joblib.load("hospital_xgb_pipeline.pkl")
 
 df = load_data()
 model = load_model()
@@ -50,17 +50,19 @@ def recommend_hospitals(user_lat, user_lon, user_state, disease_query, top_n=5):
         .head(top_n)
     ).reset_index(drop=True)
 
-    display_columns = ['hospital_name', 'state', 'district', 'rating', 'distance_km', 'predicted_score']
     return top_hospitals, X_raw, shap_values, explainer
 
 # ---------- Streamlit UI ----------
 st.set_page_config(page_title="PM-JAY Hospital Recommender", layout="centered")
-st.title("\U0001F3E5 PM-JAY Hospital Recommender")
+st.title("🏥 PM-JAY Hospital Recommender")
 st.markdown("Find the best hospitals near you based on your location and disease.")
 
+# Disease selection
 disease_list = sorted(df['disease_query'].dropna().unique())
 selected_disease = st.selectbox("Select your disease/condition:", disease_list)
-user_location = st.text_input("\U0001F4CD Enter your location (city or pincode):")
+
+# Location input
+user_location = st.text_input("📍 Enter your location (city or pincode):")
 
 if user_location:
     try:
@@ -71,22 +73,24 @@ if user_location:
             user_lat = location.latitude
             user_lon = location.longitude
             user_state = None
+
+            # Reverse geocoding for state
             reverse_location = geolocator.reverse((user_lat, user_lon), exactly_one=True)
             if reverse_location and 'state' in reverse_location.raw['address']:
                 user_state = reverse_location.raw['address']['state']
-                st.success(f"\U0001F4CD Location found: {location.address} ({user_lat:.4f}, {user_lon:.4f}) in **{user_state}**")
+                st.success(f"📍 Location found: {location.address} ({user_lat:.4f}, {user_lon:.4f}) in **{user_state}**")
             else:
                 st.warning("⚠️ Could not detect your state for preference boosting.")
 
-            if st.button("\U0001F50D Recommend Hospitals") and user_state:
+            # Recommend button
+            if st.button("🔍 Recommend Hospitals") and user_state:
                 results, X_raw, shap_values, explainer = recommend_hospitals(user_lat, user_lon, user_state, selected_disease)
 
                 if results is not None and not results.empty:
                     st.success(f"Top hospitals for **{selected_disease}** near you (preference for {user_state}):")
-                    display_results = results[['hospital_name', 'state', 'district', 'rating', 'distance_km', 'predicted_score']].reset_index(drop=True)
-                    st.dataframe(display_results, use_container_width=True)
+                    st.dataframe(results[['hospital_name', 'state', 'district', 'rating', 'distance_km', 'predicted_score']], use_container_width=True)
 
-                    st.markdown("### \U0001F50D Feature Contributions (SHAP)")
+                    st.markdown("### 🔍 Feature Contributions (SHAP)")
                     for i in results.index:
                         st.markdown(f"**{results.at[i, 'hospital_name']}**")
                         fig, ax = plt.subplots()
