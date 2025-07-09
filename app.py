@@ -7,15 +7,18 @@ from sklearn.metrics.pairwise import haversine_distances
 from geopy.geocoders import Nominatim
 import shap
 import matplotlib.pyplot as plt
+import os
 
 # ---------- Load Data and Model ----------
 @st.cache_data
 def load_data():
-    return pd.read_csv("synthetic_pmjay_dataset.csv")
+    filepath = os.path.join(os.path.dirname(__file__), "synthetic_pmjay_dataset.csv")
+    return pd.read_csv(filepath)
 
 @st.cache_resource
 def load_model():
-    return joblib.load("hospital_xgb_pipeline.pkl")
+    filepath = os.path.join(os.path.dirname(__file__), "hospital_xgb_pipeline.pkl")
+    return joblib.load(filepath)
 
 df = load_data()
 model = load_model()
@@ -104,3 +107,4 @@ if user_location:
         st.error(f"❌ Geocoding failed: {e}")
 else:
     st.info("Please enter your location to continue.")
+
