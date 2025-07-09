@@ -65,7 +65,7 @@ disease_list = sorted(df['disease_query'].dropna().unique())
 selected_disease = st.selectbox("Select your disease/condition:", disease_list)
 
 # Location input
-user_location = st.text_input("📍 Enter your location (city or pincode):")
+user_location = st.text_input("📍 Enter your pincode:")
 
 if user_location:
     try:
