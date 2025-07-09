@@ -4,7 +4,7 @@ import numpy as np
 import joblib
 from math import radians
 from sklearn.metrics.pairwise import haversine_distances
-from geopy.geocoders import Nominatim
+from opencage.geocoder import OpenCageGeocode
 import shap
 import matplotlib.pyplot as plt
 import os
@@ -58,36 +58,38 @@ def recommend_hospitals(user_lat, user_lon, user_state, disease_query, top_n=5):
 # ---------- Streamlit UI ----------
 st.set_page_config(page_title="PM-JAY Hospital Recommender", layout="centered")
 st.title("🏥 PM-JAY Hospital Recommender")
-st.markdown("Find the best hospitals near you based on your location and disease.")
+st.markdown("Find the best hospitals near you based on your **pincode** and disease.")
+
+# Load geocoder with OpenCage
+@st.cache_resource
+def get_geocoder():
+    return OpenCageGeocode("69f74547167a4d6e958d469ad0d940f6")  # Your API key
+
+geocoder = get_geocoder()
 
 # Disease selection
 disease_list = sorted(df['disease_query'].dropna().unique())
 selected_disease = st.selectbox("Select your disease/condition:", disease_list)
 
-# Location input
+# Pincode input
 user_location = st.text_input("📍 Enter your pincode:")
 
 if user_location:
     try:
-        geolocator = Nominatim(user_agent="hospital-recommender")
-        location = geolocator.geocode(user_location)
+        results = geocoder.geocode(user_location + ", India")
+        if results and len(results):
+            geometry = results[0]['geometry']
+            components = results[0]['components']
+            user_lat = geometry['lat']
+            user_lon = geometry['lng']
+            user_state = components.get('state', '')
 
-        if location:
-            user_lat = location.latitude
-            user_lon = location.longitude
-            user_state = None
+            st.success(f"📍 Location found: ({user_lat:.4f}, {user_lon:.4f}) in **{user_state}**")
 
-            # Reverse geocoding for state
-            reverse_location = geolocator.reverse((user_lat, user_lon), exactly_one=True)
-            if reverse_location and 'state' in reverse_location.raw['address']:
-                user_state = reverse_location.raw['address']['state']
-                st.success(f"📍 Location found: {location.address} ({user_lat:.4f}, {user_lon:.4f}) in **{user_state}**")
-            else:
-                st.warning("⚠️ Could not detect your state for preference boosting.")
-
-            # Recommend button
             if st.button("🔍 Recommend Hospitals") and user_state:
-                results, X_raw, shap_values, explainer = recommend_hospitals(user_lat, user_lon, user_state, selected_disease)
+                results, X_raw, shap_values, explainer = recommend_hospitals(
+                    user_lat, user_lon, user_state, selected_disease
+                )
 
                 if results is not None and not results.empty:
                     st.success(f"Top hospitals for **{selected_disease}** near you (preference for {user_state}):")
@@ -102,9 +104,9 @@ if user_location:
                 else:
                     st.error("No hospitals found for this disease.")
         else:
-            st.warning("⚠️ Could not find the location. Try being more specific.")
+            st.warning("⚠️ Could not find the location. Try a valid pincode.")
     except Exception as e:
         st.error(f"❌ Geocoding failed: {e}")
 else:
-    st.info("Please enter your location to continue.")
+    st.info("Please enter your pincode to continue.")
 
