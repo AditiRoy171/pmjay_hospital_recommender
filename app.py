@@ -83,8 +83,9 @@ if user_location:
             user_lat = geometry['lat']
             user_lon = geometry['lng']
             user_state = components.get('state', '')
+            full_address = results[0].get('formatted', '')
 
-            st.success(f"📍 Location found: ({user_lat:.4f}, {user_lon:.4f}) in **{user_state}**")
+            st.success(f"📍 Location found: {full_address} ({user_lat:.4f}, {user_lon:.4f}) in **{user_state}**")
 
             if st.button("🔍 Recommend Hospitals") and user_state:
                 results, X_raw, shap_values, explainer = recommend_hospitals(
@@ -109,4 +110,3 @@ if user_location:
         st.error(f"❌ Geocoding failed: {e}")
 else:
     st.info("Please enter your pincode to continue.")
-
