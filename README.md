@@ -44,25 +44,41 @@ The ML model predicts a **hospital suitability score** using:
 | `distance_km`   | Distance from user to hospital              |
 | `match_score`   | Whether the hospital treats the disease     |
 
-### 🧮 Final Scoring Formula:
 
-```text
+That last line — ```` ``` ```` — is what **closes the Python code block**.
+
+---
+
+### ✅ Full example with section separator:
+
+```markdown
+### 🧮 Final Scoring Formula
+
+```python
 base_score = model.predict([rating, distance_km, match_score])
 boost_factor = 1.1 if hospital.state == user_state else 1.0
 final_score = base_score × boost_factor
 
-🔍 SHAP Explainability
-Each hospital recommendation is accompanied by a SHAP waterfall plot showing:
+## 🔍 SHAP Explainability
 
-How the model used each feature
-Which attributes pushed the score up or down
-Why that hospital is ranked highly
-This ensures transparency and trust in the AI.
+This project uses **SHAP (SHapley Additive exPlanations)** to make model predictions transparent and interpretable.
 
-💻 Tech Stack
+For each recommended hospital, a **SHAP waterfall plot** is generated to show:
+
+- 📈 How each feature (like `rating`, `distance_km`, `match_score`) contributed to the final score  
+- 📉 Which features decreased the score and by how much  
+- 🧠 Why a hospital ranked higher than others for a given query  
+
+These visual explanations ensure that users — whether patients or stakeholders — can trust the **"why"** behind every recommendation.
+
+> SHAP makes machine learning models explainable, fair, and more human-understandable — a critical step when building for public good.
+
+---
+
+## 💻 Tech Stack
 
 | Layer          | Tools Used                      |
-| -------------- | ------------------------------- |
+|----------------|---------------------------------|
 | Frontend UI    | Streamlit                       |
 | ML Model       | XGBoost + Scikit-learn Pipeline |
 | Geolocation    | OpenCage Geocoding API          |
@@ -70,21 +86,12 @@ This ensures transparency and trust in the AI.
 | Deployment     | Streamlit Cloud                 |
 | Data           | Synthetic PM-JAY dataset (CSV)  |
 
-🌐 Live App
-👉 Click to Try It Live
-Enter a 6-digit pincode like 110001 (Delhi) or 832303 (Jharkhand), select a disease, and get your results!
+---
 
-- The synthetic dataset was created by sampling ~50 hospitals from the official PM-JAY hospital list and enriching them with logical features such as `rating`, `match_score`, and geolocations.
-- Attributes were assigned based on realistic assumptions (e.g., higher ratings for urban hospitals, better disease match for specialty centers).
-- This allowed training and testing the recommender without using any sensitive or restricted data.
+## 📦 Installation (for local testing)
 
-## Final Remarks
-
-This project demonstrates how data science and machine learning can be applied meaningfully to address real-world challenges in public healthcare access.
-
-By leveraging synthetic data, explainable AI, and geospatial filtering, the system aims to support more transparent and informed decision-making for PM-JAY beneficiaries.
-
-Feedback, suggestions, and collaborations are welcome. Thank you for taking the time to explore this work.
-
-📄 License
-This project is released under the MIT License — feel free to fork, modify, or build upon it with credit.
+```bash
+git clone https://github.com/your-username/pmjay_hospital_recommender.git
+cd pmjay_hospital_recommender
+pip install -r requirements.txt
+streamlit run app.py
